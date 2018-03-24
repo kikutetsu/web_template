@@ -1,92 +1,126 @@
-const webpack = require('webpack');
-const HtmlWebPackPlugin = require("html-webpack-plugin");
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
-const path = require('path');
-const MODE = 'development';
+// yarn add apply-loader autoprefixer babel-core babel-loader babel-preset-env copy-webpack-plugin css-loader extract-text-webpack-plugin globule node-sass postcss postcss-loader pug pug-loader sass-loader style-loader webpack webpack-dev-server
 
-module.exports = [
+// develop : webpack-dev-server --open
+// build   : NODE_ENV=production webpack
+
+const webpack = require('webpack')
+const path = require('path')
+const globule = require('globule')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+const ExtractTextPlugin = require('extract-text-webpack-plugin')
+
+// ディレクトリの設定
+const opts = {
+  srcDir: path.join(__dirname, 'src'),
+  destDir: path.join(__dirname, 'public')
+}
+
+// keyの拡張子のファイルが、valueの拡張子のファイルに変換される
+const convertExtensions = {
+  pug: 'html',
+  sass: 'css',
+  js: 'js'
+}
+
+// トランスパイルするファイルを列挙する
+// _から始まるファイルは、他からimportされるためのファイルとして扱い、個別のファイルには出力しない
+const files = {}
+Object.keys(convertExtensions).forEach(from => {
+  const to = convertExtensions[from]
+  globule.find([`**/*.${from}`, `!**/_*.${from}`], {cwd: opts.srcDir}).forEach(filename => {
+    files[filename.replace(new RegExp(`.${from}$`, 'i'), `.${to}`)] = path.join(opts.srcDir, filename)
+  })
+})
+
+// pugでトランスパイルする
+const pugLoader = [
+  'apply-loader',
+  'pug-loader'
+]
+
+// Sassをトランスパイルし、autoprefixerをかけるようにする
+const sassLoader = [
   {
-    mode: MODE,
-    context: path.join(__dirname, 'src'),
-    entry: './js/index.js',
-    output: {
-      path: path.resolve('public'),
-      publicPath: '/public',
-      filename: 'app.js'
-    },
-    module: {
-      rules: [
-        {
-          exclude: /node_modules/,
-          loader: 'babel-loader',
-          query: {
-            presets: ['es2015']
-          }
-        }
-      ]
-    },
-    resolve: {
-      extensions: ['.js', '.jsx']
+    loader: 'css-loader',
+    options: {
+      minimize: true
     }
   },
   {
-    mode: MODE,
-    context: path.join(__dirname, 'src'),
-    entry: './css/style.scss',
-    output: {
-        path: path.resolve('public'),
-        filename: 'style.css'
-    },
-    module: {
-      rules: [
-        {
-          test: /\.scss$/,
-          use: ExtractTextPlugin.extract({
-            fallback: 'style-loader',
-            use: [
-              {
-                  loader: 'css-loader',
-                  options: {
-                      // If you are having trouble with urls not resolving add this setting.
-                      // See https://github.com/webpack-contrib/css-loader#url
-                      url: false,
-                      minimize: true,
-                      sourceMap: true
-                  }
-              },
-              {
-                  loader: 'sass-loader',
-                  options: {
-                      sourceMap: true
-                  }
-              }
-            ]
-          })
-        }
-      ]
-    },
-    plugins: [
-      new ExtractTextPlugin('style.css')
-      //if you want to pass in options, you can do so:
-      //new ExtractTextPlugin({
-      //  filename: 'style.css'
-      //})
-    ]
-  }
+    loader: 'postcss-loader',
+    options: {
+      ident: 'postcss',
+      plugins: (loader) => [require('autoprefixer')()]
+    }
+  },
+  'sass-loader'
 ]
 
+// Babelでトランスパイルする
+const jsLoader = {
+  loader: 'babel-loader',
+  query: {
+    presets: ['env']
+  }
+}
 
-// module.exports = {
-//     mode: MODE,
-//   module: {
-//     rules: [
-//       {
-//         test: /\.js$/,
-//         exclude: /node_modules/,
-//         use: {
-//           loader: "babel-loader"
-//         }
-//       },
-//     ]
-//   },
-// };
+const config = {
+  context: opts.srcDir,
+  entry: files,
+  output: {
+    filename: '[name]',
+    path: opts.destDir
+  },
+  module: {
+    rules: [
+      {
+        test: /\.pug$/,
+        use: ExtractTextPlugin.extract(pugLoader)
+      },
+      {
+        test: /\.sass$/,
+        oneOf: [
+          {
+            // pugから `require('./hoge.sass?inline')` のように呼ばれた時は、ExtractTextPluginをかけない
+            resourceQuery: /inline/,
+            use: sassLoader
+          },
+          {
+            // それ以外の時は、単純にファイルを生成する
+            use: ExtractTextPlugin.extract(sassLoader)
+          }
+        ]
+      },
+      {
+        test: /\.js$/,
+        exclude: /node_modules(?!\/webpack-dev-server)/,
+        use: jsLoader
+      }
+    ]
+  },
+  plugins: [
+    new ExtractTextPlugin('[name]'),
+    // convertExtensionsに含まれていないファイルは、単純にコピーする
+    new CopyWebpackPlugin(
+      [{from: {glob: '**/*', dot: true}}],
+      {ignore: Object.keys(convertExtensions).map((ext) => `*.${ext}`)}
+    ),
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+    })
+  ],
+  devServer: {
+    contentBase: opts.destDir,
+    watchContentBase: true
+  }
+}
+
+if (process.env.NODE_ENV === 'production') {
+  config.plugins = config.plugins.concat([
+    new webpack.optimize.UglifyJsPlugin(),
+    new webpack.optimize.OccurrenceOrderPlugin(),
+    new webpack.optimize.AggressiveMergingPlugin()
+  ])
+}
+
+module.exports = config
