@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "./node_modules/.bin/webpack-dev-server --mode development --open",
+    "start": "./node_modules/.bin/webpack-dev-server --open",
     "build": "./node_modules/.bin/webpack"
   },
   "dependencies": {
@@ -12,6 +12,7 @@
     "autoprefixer": "^8.2.0",
     "copy-webpack-plugin": "^4.5.1",
     "globule": "^1.2.0",
+    "normalize.css": "^8.0.0",
     "postcss": "^6.0.21",
     "postcss-loader": "^2.1.3",
     "pug": "^2.0.3",
@@ -28,6 +29,8 @@
     "html-loader": "^0.5.5",
     "html-webpack-plugin": "^3.1.0",
     "node-sass": "^4.8.3",
+    "pug-cli": "^1.0.0-alpha6",
+    "pug-html-loader": "^1.1.5",
     "sass-loader": "^6.0.7",
     "style-loader": "^0.20.3",
     "url-loader": "^1.0.1",

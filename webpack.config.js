@@ -35,7 +35,8 @@ Object.keys(convertExtensions).forEach(from => {
 // pugでトランスパイルする
 const pugLoader = [
   'apply-loader',
-  'pug-loader'
+  'pug-loader',
+  'pug-html-loader'
 ]
 
 // Sassをトランスパイルし、autoprefixerをかけるようにする
@@ -71,6 +72,7 @@ const config = {
     filename: '[name]',
     path: opts.destDir
   },
+  devtool: 'source-map',
   module: {
     rules: [
       {
