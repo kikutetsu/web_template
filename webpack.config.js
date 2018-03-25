@@ -72,6 +72,7 @@ const config = {
     filename: '[name]',
     path: opts.destDir
   },
+  devtool: 'source-map',
   module: {
     rules: [
       {

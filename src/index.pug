@@ -1,10 +1,12 @@
 extends _layout.pug
 
-append js
-  script(src="common2.js")
+block vars
+  include _config.pug
+  - var key = "top"
+  - var page = pages[key]
 
 block contents
-  h2 page_title
+  h2 page.title
   .keyvisual_container
     p.keyvisual_image
       img(src=image_path+"/top/top_keyvisual.jpg", alt="")
