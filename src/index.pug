@@ -1,16 +1,10 @@
-doctype html
-html(lang='ja')
-  head
-    title= pageTitle
-    link(rel='stylesheet' href='./css/style.css')
-    script(src='./js/index.js')
-  body
-    h1 Pug - node template engine
-    #container.col
-      if youAreUsingPug
-        p You are amazing
-      else
-        p Get on it!
-      p.
-        Pug is a terse and simple templating language with a
-        strong focus on performance and powerful features.
+extends _layout.pug
+
+append js
+  script(src="common2.js")
+
+block contents
+  h2 page_title
+  .keyvisual_container
+    p.keyvisual_image
+      img(src=image_path+"/top/top_keyvisual.jpg", alt="")

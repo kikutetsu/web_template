@@ -1,0 +1,13 @@
+doctype html
+html(lang="ja")
+  head
+    include include/_inc_head.pug
+    block js
+      script(src="common.js")
+
+  body
+    .l_contents
+      include include/_inc_header.pug
+      include include/_inc_nav.pug
+      block contents
+    include include/_inc_footer.pug

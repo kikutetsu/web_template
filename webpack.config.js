@@ -35,7 +35,8 @@ Object.keys(convertExtensions).forEach(from => {
 // pugでトランスパイルする
 const pugLoader = [
   'apply-loader',
-  'pug-loader'
+  'pug-loader',
+  'pug-html-loader'
 ]
 
 // Sassをトランスパイルし、autoprefixerをかけるようにする
